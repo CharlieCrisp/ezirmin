@@ -127,6 +127,7 @@ module Log(AO : Irmin.AO_MAKER)(SM : Irmin.S_MAKER)(V: Tc.S0) = struct
     remove_from_right with_duplicates
 
   let merge : Path.t -> t option Irmin.Merge.t =
+    Printf.printf "[DEBUG] Starting merge at %f\n%!" (Ptime.to_float_s (Ptime_clock.now()));
     let open Irmin.Merge.OP in
     let merge' ~old v1 v2 =
       Store.create () >>= fun store ->
@@ -142,7 +143,10 @@ module Log(AO : Irmin.AO_MAKER)(SM : Irmin.S_MAKER)(V: Tc.S0) = struct
       | Some (C.Value v) -> [v]
       | Some (C.Merge lv) -> lv
       in
+      let lv3 = sort @@ lv1 @ lv2 in
       Store.add store (C.Merge (sort @@ lv1 @ lv2)) >>= fun m ->
+      Printf.printf "[DEBUG] Merge length %i\n%!" (List.length lv3);
+      Printf.printf "[DEBUG] Finishing merge at %f\n%!" (Ptime.to_float_s (Ptime_clock.now()));
       ok m
       in fun _path -> Irmin.Merge.option (module K) merge'
 end
